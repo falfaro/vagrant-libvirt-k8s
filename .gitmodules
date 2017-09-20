@@ -1,0 +1,6 @@
+[submodule "vagrant-libvirt"]
+	path = vagrant-libvirt
+	url = https://github.com/vagrant-libvirt/vagrant-libvirt.git
+[submodule "kubespray"]
+	path = kubespray
+	url = https://github.com/kubernetes-incubator/kubespray.git
