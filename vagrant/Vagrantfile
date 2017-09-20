@@ -26,9 +26,6 @@ Vagrant.configure("2") do |config|
     domain.storage :file, :device => :cdrom, :bus => :ide, :type => :raw, :path => "/home/falfaro/k8s/cloud-init/testing-cidata.iso"
   end
 
-  # Install Python 2.7
-  config.vm.provision :shell, path: "bootstrap.sh"
-
   # Use :ansible or :ansible_local to
   # select the provisioner of your choice
   config.vm.provision :ansible do |ansible|
