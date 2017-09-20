@@ -5,6 +5,17 @@
 # configures the configuration version (we support older styles for
 # backwards compatibility). Please don't change it unless you know what
 # you're doing.
+
+kubemasters = [
+  "kubemaster1",
+  "kubemaster2",
+  "kubemaster3",
+]
+kubenodes = [
+  "kubeworker1",
+  "kubeworker2",
+]
+
 Vagrant.configure("2") do |config|
   config.vm.provider :libvirt do |domain|
     domain.memory = 2048
@@ -21,8 +32,9 @@ Vagrant.configure("2") do |config|
   # Use :ansible or :ansible_local to
   # select the provisioner of your choice
   config.vm.provision :ansible do |ansible|
+    ansible.compatibility_mode = '2.0'
     ansible.playbook = "kubespray/cluster.yml"
-    ansible.sudo = true
+    ansible.become = true
     ansible.limit = "all"
     ansible.host_key_checking = false
     #ansible.raw_arguments = ["--forks=#{$num_instances}"]
@@ -33,13 +45,20 @@ Vagrant.configure("2") do |config|
     #  }
     #ansible.tags = ['download']
     ansible.groups = {
-      "etcd" => ["kubemaster[1:3]"],
-      "kube-master" => ["kubemaster[1:3]"],
-      "kube-node" => ["kubeworker[1:2]"],
-      "k8s-cluster:children" => ["kube-master", "kube-node"],
-     }
+      "etcd" => kubemasters,
+      "kube-master" => kubemasters,
+      "kube-node" => kubenodes,
+      "k8s-cluster:children" => [
+        "kube-master",
+	"kube-node",
+      ],
+      "k8s-clusters:vars" => {
+        "kube_network_plugin" => "flannel"
+      }
+    }
   end
 
+  # SSH configuration
   config.ssh.username = "ubuntu"
   config.ssh.insert_key = FALSE
   config.ssh.shell = "bash -c 'BASH_ENV=/etc/profile exec bash'"
@@ -47,19 +66,9 @@ Vagrant.configure("2") do |config|
   # Defaults to Ubuntu 16.04 (Xenial)
   config.vm.box = "xenial"
 
-  # Kubemasters
-  (1..3).each do |i|
-    hostname = "kubemaster#{i}"
-    config.vm.define hostname do |node|
-      node.vm.hostname = hostname
-    end
-  end
-
-  # Kubenodes
-  (1..2).each do |i|
-    hostname = "kubeworker#{i}"
-    config.vm.define hostname do |node|
-      node.vm.hostname = hostname
+  (kubemasters + kubenodes).each do |i|
+    config.vm.define i do |node|
+      node.vm.hostname = i
     end
   end
 end
