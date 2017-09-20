@@ -1,0 +1,10 @@
+#cloud-config
+apt:
+  proxy: http://cache:3142
+ssh_authorized_keys:
+  - ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDZyH5J25LhryU3z+JAHbgAnEXdDLPF2ZPfgBG+BqgqkzJJNmyWImyAj/SuDXQ3PXiEzahUjPc4AXNzGAKMhY2f+UIgsQtsdIYRw3owfg7Wwebnpbquu4PFiPd+sjK7N3tyDlhncbY52rJHJ5l/efvHKiKUS02WuZgyzzbFsFyjwF6Nc8KKuQMLQZTwVk5V+E/ogxtz5dPKRCxlWYOFb6EsNM44TCXlURvdtp/WY22QMVWOZrsFd0AFN2ndoByXDAkNn+4ty+pLe5F1HiD8Hq4TyJhR9CFsU6uMy/EwbJxIxh5pnLYzeVgj/z54XtOHh+eK+nG3snu4dPDlglMtMjIJ falfaro@hetzner
+  - ssh-rsa AAAAB3NzaC1yc2EAAAABIwAAAQEA6NF8iallvQVp22WDkTkyrtvp9eWW6A8YVr+kz4TjGYe7gHzIw+niNltGEFHzD8+v1I2YJ6oXevct1YeS0o9HZyN1Q9qgCgzUFtdOKLv6IedplqoPkcmF0aYet2PkEDo3MlTBckFXPITAMzF8dJSIFo9D8HfdOV0IAdx4O7PtixWKn5y2hMNG0zQPyUecp4pzC6kivAIhyfHilFR61RGL+GPXQ2MWZWFYbAGjyiYJnAmCP3NOTd0jMZEnDkbUvxhMmBYSdETk1rRgm+R4LOzFUGaHqHDLKLX+FIPKcF96hrucXzcWyLbIbEgE98OHlnVYCzRdK8jlqm8tehUc9c9WhQ== vagrant insecure public key
+ssh_svcname: ssh
+runcmd:
+  - ifdown eth0 && ifup eth0
+  - service network restart && systemctl restart sshd.service
