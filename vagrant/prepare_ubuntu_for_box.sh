@@ -15,14 +15,15 @@ sudo mount /dev/nbd0p1 /mnt/ubuntu
 
 sudo mount -t proc proc /mnt/ubuntu/proc/
 sudo mkdir /mnt/ubuntu/run/resolvconf
-sudo cp /etc/resolv.conf //mnt/ubuntu/run/resolvconf/
+sudo cp /etc/resolv.conf /mnt/ubuntu/run/resolvconf/
 
 sudo chroot /mnt/ubuntu apt-get update
 sudo chroot /mnt/ubuntu apt-get -y --purge remove update-manager-core
 sudo chroot /mnt/ubuntu apt-get -y --purge remove python3-update-manager
+sudo chroot /mnt/ubuntu apt-get -y install python python-apt
+sudo chroot /mnt/ubuntu apt-get -y --purge autoremove
 
-sudo chroot /mnt/ubuntu apt-get install python -y
-
+sudo rm /mnt/ubuntu/run/resolvconf/resolv.conf
 sudo umount /mnt/ubuntu/proc
 
 sync
