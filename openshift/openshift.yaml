@@ -1,0 +1,72 @@
+- hosts: all
+  become: true
+  vars:
+    packages:
+    - docker
+    - git
+    # Required to remove some annoying Docker warnings about netfilter
+    sysctls:
+    - name: net.bridge.bridge-nf-call-iptables
+      value: 1
+    - name: net.bridge.bridge-nf-call-ip6tables
+      value: 1
+  handlers:
+  - name: Restart Docker
+    service:
+      name: docker
+      state: restarted
+  tasks:
+  - name: Enable SElinux in permissive mode
+    selinux:
+      policy: targeted
+      state: permissive
+  - name: Ensure kernel modules are loaded
+    modprobe:
+      name: br_netfilter 
+  - name: Configure sysctl values
+    sysctl:
+      name: "{{item.name}}"
+      value: "{{item.value}}"
+      state: present
+    with_items: "{{sysctls}}"
+  - name: Ensure packages are installed
+    package:
+      name: "{{item}}"
+      state: latest
+    with_items: "{{packages}}"
+  - name: Ensure proper Docker configuration
+    copy:
+      src: daemon.json
+      dest: /etc/docker/daemon.json
+    notify: Restart Docker
+  - name: Ensure proper Docker storage configuration
+    copy:
+      src: docker-storage-setup 
+      dest: /etc/sysconfig/docker-storage-setup 
+    notify: Restart Docker
+  - name: Enable Docker
+    service:
+      name: docker
+      enabled: yes
+  - name: Ensure OpenShift client tools are deployed
+    unarchive:
+      src: openshift-origin-client-tools-v3.6.0-c4dd4cf-linux-64bit.tar.gz
+      dest: /root/
+      creates: /root/openshift-origin-client-tools-v3.6.0-c4dd4cf-linux-64bit/oc
+  - name: Ensure OpenShift client tools are installed
+    copy:
+      remote_src: true
+      src: /root/openshift-origin-client-tools-v3.6.0-c4dd4cf-linux-64bit/oc
+      dest: /usr/local/sbin/oc
+      mode: 0755
+  - meta: flush_handlers
+  - name: Deploy OpenShift
+    command: /usr/local/sbin/oc cluster up
+    args:
+      creates: /root/.kube
+  - name: Pull Kubernetes from git
+    git:
+      repo: 'https://github.com/kubernetes/kubernetes.git'
+      dest: /root/kubernetes
+  - name: Switch to an OpenShift admin context
+    command: /usr/local/sbin/oc login -u system:admin

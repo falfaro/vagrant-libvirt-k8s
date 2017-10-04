@@ -1,0 +1,17 @@
+Vagrant.configure("2") do |config|
+  config.vm.provider :libvirt do |domain|
+    domain.memory = 16384
+    domain.cpus = 8
+    domain.nested = true
+    domain.volume_cache = 'writeback'
+  end
+  # Disable rsync folders
+  config.vm.synced_folder ".", "/vagrant", disabled: true
+  config.vm.box = "centos7"
+  config.vm.define "openshift" do |node|
+      node.vm.hostname = "openshift"
+      node.vm.provision :ansible do |ansible|
+        ansible.playbook = 'openshift.yaml'
+      end
+    end
+end

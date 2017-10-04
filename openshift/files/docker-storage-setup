@@ -1,0 +1,9 @@
+# Edit this file to override any configuration options specified in
+# /usr/share/container-storage-setup/container-storage-setup.
+#
+# For more details refer to "man container-storage-setup"
+STORAGE_DRIVER=overlay2
+#DEVS=/dev/vda3
+CONTAINER_ROOT_LV_NAME=dockerlv
+CONTAINER_ROOT_LV_MOUNT_PATH=/var/lib/docker/overlay2
+VG=VolGroup00
