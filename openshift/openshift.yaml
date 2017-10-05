@@ -4,6 +4,9 @@
     packages:
     - docker
     - git
+    - centos-release-openshift-origin
+    - origin-clients
+    - wget
     # Required to remove some annoying Docker warnings about netfilter
     sysctls:
     - name: net.bridge.bridge-nf-call-iptables
@@ -16,10 +19,6 @@
       name: docker
       state: restarted
   tasks:
-  - name: Enable SElinux in permissive mode
-    selinux:
-      policy: targeted
-      state: permissive
   - name: Ensure kernel modules are loaded
     modprobe:
       name: br_netfilter 
@@ -34,6 +33,9 @@
       name: "{{item}}"
       state: latest
     with_items: "{{packages}}"
+  - seboolean:
+      name: virt_use_nfs
+      state: yes
   - name: Ensure proper Docker configuration
     copy:
       src: daemon.json
@@ -48,25 +50,18 @@
     service:
       name: docker
       enabled: yes
-  - name: Ensure OpenShift client tools are deployed
-    unarchive:
-      src: openshift-origin-client-tools-v3.6.0-c4dd4cf-linux-64bit.tar.gz
-      dest: /root/
-      creates: /root/openshift-origin-client-tools-v3.6.0-c4dd4cf-linux-64bit/oc
-  - name: Ensure OpenShift client tools are installed
-    copy:
-      remote_src: true
-      src: /root/openshift-origin-client-tools-v3.6.0-c4dd4cf-linux-64bit/oc
-      dest: /usr/local/sbin/oc
-      mode: 0755
   - meta: flush_handlers
   - name: Deploy OpenShift
-    command: /usr/local/sbin/oc cluster up
+    command: oc cluster up
     args:
       creates: /root/.kube
+  - name: Pull OpenShift from git
+    git:
+      repo: "https://github.com/falfaro/origin.git"
+      dest: /root/origin
   - name: Pull Kubernetes from git
     git:
-      repo: 'https://github.com/kubernetes/kubernetes.git'
+      repo: 'https://github.com/falfaro/kubernetes.git'
       dest: /root/kubernetes
   - name: Switch to an OpenShift admin context
-    command: /usr/local/sbin/oc login -u system:admin
+    command: oc login -u system:admin
